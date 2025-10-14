@@ -4,6 +4,7 @@ TradePilot Engine Core - Orchestrates all 10 analysis layers
 import pandas as pd
 from typing import Dict, List, Optional
 from .data_processor import DataProcessor
+from .json_utils import clean_for_json
 from .layers import (
     Layer1Momentum,
     Layer2Volume,
@@ -106,7 +107,8 @@ class TradePilotEngine:
         # Generate overall signal
         results["overall_signal"] = self._generate_overall_signal(results["layers"])
         
-        return results
+        # Clean all NumPy types for JSON serialization
+        return clean_for_json(results)
     
     def get_signal_summary(self, candles_data: Dict, symbol: str) -> Dict:
         """
@@ -126,7 +128,7 @@ class TradePilotEngine:
         
         layers = full_analysis["layers"]
         
-        return {
+        summary = {
             "symbol": symbol,
             "latest_price": full_analysis["latest_price"],
             "momentum_bias": layers["layer_1_momentum"]["signal"],
@@ -141,6 +143,9 @@ class TradePilotEngine:
             "overall_confidence": full_analysis["overall_signal"]["confidence"],
             "recommendation": full_analysis["overall_signal"]["recommendation"]
         }
+        
+        # Clean for JSON
+        return clean_for_json(summary)
     
     def _generate_overall_signal(self, layers: Dict) -> Dict:
         """
